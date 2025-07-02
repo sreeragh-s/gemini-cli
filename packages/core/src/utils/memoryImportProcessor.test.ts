@@ -183,6 +183,24 @@ describe('memoryImportProcessor', () => {
       expect(result).toContain(firstContent);
       expect(result).toContain(secondContent);
     });
+
+    it('should ignore @ mentions inside of code blocks', async () => {
+      const content =
+        'This is a test.\n\n```python\n@app.get("/api/items")\nasync def get_items():\n    return []\n```\n\nThis is an import: @./real.md';
+      const basePath = '/test/path';
+      const realContent = 'Real content';
+
+      mockedFs.access.mockResolvedValue(undefined);
+      mockedFs.readFile.mockResolvedValue(realContent);
+
+      const result = await processImports(content, basePath, true);
+
+      expect(result).toContain('<!-- Imported from: ./real.md -->');
+      expect(result).toContain(realContent);
+      expect(console.warn).not.toHaveBeenCalledWith(
+        expect.stringContaining('app.get'),
+      );
+    });
   });
 
   describe('validateImportPath', () => {

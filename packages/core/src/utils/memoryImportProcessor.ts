@@ -58,15 +58,19 @@ export async function processImports(
     return content;
   }
 
-  // Regex to match @path/to/file imports (supports any file extension)
-  // Supports both @path/to/file.md and @./path/to/file.md syntax
-  const importRegex = /@([./]?[^\s\n]+\.[^\s\n]+)/g;
+  // Regex to match @path/to/file imports, ignoring code blocks
+  const importRegex =
+    /(?:```[\s\S]*?```)|(?:`[^`]*`)|@([./]?[^\s\n]+\.[^\s\n]+)/g;
 
   let processedContent = content;
   let match: RegExpExecArray | null;
 
   // Process all imports in the content
   while ((match = importRegex.exec(content)) !== null) {
+    if (!match[1]) {
+      // This match is a code block, so we skip it
+      continue;
+    }
     const importPath = match[1];
 
     // Validate import path to prevent path traversal attacks
